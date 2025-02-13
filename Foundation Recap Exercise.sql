@@ -147,3 +147,87 @@ FROM PatientStay ps INNER JOIN DimHospital h ON ps.Hospital = h.Hospital
 WHERE ps.Ethnicity IS NULL
 /*
 
+
+--Adding a column to show whether a patient is High Cost (over 7), or Low Cost
+*/
+
+SELECT
+	ps.PatientId
+    ,ps.AdmittedDate
+    ,ps.DischargeDate
+    ,ps.Ward
+    ,ps.Hospital
+    ,DATEDIFF(DAY, ps.AdmittedDate, ps.DischargeDate) + 1 AS LengthOfStay
+	,ps.Tariff
+	,CASE 
+		WHEN ps.Tariff >= 7 THEN 'High Cost'
+		WHEN ps.Tariff >= 4 THEN 'Medium Cost'	
+		ELSE 'Low Cost' END AS [Cost Type]
+FROM
+	PatientStay ps
+
+/*
+
+
+--Trying to count the number of each Cost Type and Total Tariff across each Cost Type
+*/
+SELECT
+    CASE 
+		WHEN ps.Tariff >= 7 THEN 'High Cost'
+		WHEN ps.Tariff >= 4 THEN 'Medium Cost'	
+		ELSE 'Low Cost' END AS [Cost Type]
+		, COUNT(*) AS [Number of Patients]
+		, SUM(ps.Tariff) AS [Total Tariff]
+FROM
+	PatientStay ps
+GROUP BY CASE
+		WHEN ps.Tariff >= 7 THEN 'High Cost'
+		WHEN ps.Tariff >= 4 THEN 'Medium Cost'	
+ELSE 'Low Cost' END
+/*
+
+--Not interested in Medium cost anymore, just High Cost or Low Cost
+*/
+SELECT
+    CASE 
+		WHEN ps.Tariff >= 7 THEN 'High Cost'
+		WHEN ps.Tariff >= 3 THEN 'Medium Cost'	
+		ELSE 'Low Cost' END AS [Cost Type]
+		, COUNT(*) AS [Number of Patients]
+		, SUM(ps.Tariff) AS [Total Tariff]
+FROM
+	PatientStay ps
+WHERE CASE 
+		WHEN ps.Tariff >= 7 THEN 'High Cost'
+		WHEN ps.Tariff >= 3 THEN 'Medium Cost'	
+		ELSE 'Low Cost' END IN ('High Cost', 'Low Cost')
+GROUP BY CASE
+		WHEN ps.Tariff >= 7 THEN 'High Cost'
+		WHEN ps.Tariff >= 3 THEN 'Medium Cost'	
+ELSE 'Low Cost' END
+
+--Here we are going to simplify the above using a CTE, a temporary table, where we will add just the Tariff column and the new Cost Type column
+--And then add the WHERE clause and only look at the high and low cost, removing the medium cost
+;
+WITH
+	cte
+	AS
+	(
+		SELECT
+			CASE 
+		WHEN ps.Tariff >= 7 THEN 'High Cost'
+		WHEN ps.Tariff >= 3 THEN 'Medium Cost'	
+		ELSE 'Low Cost' END AS [Cost Type]
+		,ps.Tariff
+		FROM
+			PatientStay ps
+	)
+SELECT
+	cte.[Cost Type]
+	,COUNT(*) AS [Number of Patients]
+	,SUM(cte.Tariff) AS [Total Tariff]
+FROM
+	cte
+	WHERE cte.[Cost Type] IN ('High Cost', 'Low Cost')
+GROUP BY cte.[Cost Type]
+/*
