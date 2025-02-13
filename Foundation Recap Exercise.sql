@@ -8,20 +8,35 @@ This lists 44 patients admitted to London hospitals over 5 days between Feb 26th
 SELECT
 	*
 FROM
-	PatientStay ps ;
+	PatientStay ps
+
+
 
 /*
 1. List the patients -
 a) in the Oxleas or PRUH hospitals and
 b) admitted in February 2024
-c) only the Surgery wards
+c) only the Surgery wardsal
 
 2. Show the PatientId, AdmittedDate, DischargeDate, Hospital and Ward columns only, not all the columns.
 3. Order results by AdmittedDate (latest first) then PatientID column (high to low)
 4. Add a new column LengthOfStay which calculates the number of days that the patient stayed in hospital, inclusive of both admitted and discharge date.
 */
-
 -- Write the SQL statement here
+SELECT
+	ps.PatientId
+	, ps.AdmittedDate
+	, ps. DischargeDate
+	, ps. Hospital
+	, ps. Ward
+	, DATEDIFF(DAY, ps.AdmittedDate, ps.DischargeDate) +1 AS LengthOfStay
+	
+FROM
+	PatientStay ps
+WHERE ps.Hospital IN ('Oxleas', 'PRUH')
+AND ps.AdmittedDate BETWEEN '2024-02-01' AND '2024-02-29'
+AND ps.Ward LIKE '%Surgery'
+ORDER BY ps.AdmittedDate DESC, ps.PatientId DESC
 
 
 /*
@@ -32,4 +47,14 @@ c) only the Surgery wards
 */
 
 -- Write the SQL statement here
+SELECT
+	*
+FROM
+	PatientStay ps
+
+/*
+
+
+
+
 
